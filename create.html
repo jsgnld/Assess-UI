@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Quiz Master</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding: 20px;
+      background: #f4f4f4;
+    }
+    h1 {
+      font-size: 36px;
+      margin-bottom: 20px;
+    }
+    button, select, input, textarea {
+      font-size: 16px;
+      margin: 10px;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+    }
+    button:hover {
+      opacity: 0.9;
+    }
+    #quizContainer, #addQuestion, #questionForm, #savedQuestions, #actions {
+      margin-top: 20px;
+    }
+    .saved {
+      background: #fff;
+      border-radius: 12px;
+      padding: 15px;
+      margin: 10px auto;
+      width: 80%;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      text-align: left;
+    }
+    textarea, input[type="text"] {
+      width: 80%;
+      padding: 10px;
+      margin: 10px 0;
+      border: 1px solid #ccc;
+      border-radius: 12px;
+    }
+    .action-btn {
+      padding: 8px 15px;
+      margin: 5px;
+      border-radius: 12px;
+      background: #2b80ff;
+      color: white;
+    }
+    .action-btn.delete {
+      background: #e63946;
+    }
+    .action-btn.clear {
+      background: #888;
+    }
+  </style>
+</head>
+<body>
+  <h1>Quiz Master</h1>
+  <button id="startBtn" onclick="showQuiz()">Start Here</button>
+
+  <div id="quizContainer" style="display:none;">
+    <div id="addQuestion">
+      <button onclick="toggleForm()">➕</button>
+    </div>
+
+    <div id="questionForm" style="display:none;">
+      <select id="questionType" onchange="renderInputForm()">
+        <option value="" disabled selected>Select Question Type</option>
+        <option value="multiple">Multiple Choice</option>
+        <option value="identification">Identification</option>
+        <option value="truefalse">True or False</option>
+        <option value="yesno">Yes or No</option>
+        <option value="essay">Essay</option>
+      </select>
+
+      <div id="dynamicInputs"></div>
+
+      <button onclick="saveQuestion()">💾 Save Question</button>
+    </div>
+
+    <div id="savedQuestions"></div>
+
+    <div id="actions" style="display: none;">
+      <button onclick="downloadQuestions()">📥 Download All Questions</button>
+      <button onclick="togglePreview()">👁 Preview Mode</button>
+      <button class="action-btn clear" onclick="clearAll()">🧹 Clear All</button>
+    </div>
+  </div>
+
+  <script>
+    let savedQuestions = [];
+    let isPreviewMode = false;
+
+    function showQuiz() {
+      document.getElementById('startBtn').style.display = 'none';
+      document.getElementById('quizContainer').style.display = 'block';
+    }
+
+    function toggleForm() {
+      const form = document.getElementById('questionForm');
+      form.style.display = form.style.display === 'none' ? 'block' : 'none';
+    }
+
+    function renderInputForm() {
+      const type = document.getElementById('questionType').value;
+      const container = document.getElementById('dynamicInputs');
+      container.innerHTML = '';
+
+      if (type === 'essay') {
+        container.innerHTML = `
+          <textarea id="questionText" placeholder="Enter Essay Question" rows="3"></textarea>
+          <textarea id="answerText" placeholder="Sample Answer (optional)" rows="4"></textarea>
+        `;
+      } else if (type === 'multiple') {
+        container.innerHTML = `
+          <input type="text" id="questionText" placeholder="Enter Question" />
+          <input type="text" id="optionA" placeholder="Option A" />
+          <input type="text" id="optionB" placeholder="Option B" />
+          <input type="text" id="optionC" placeholder="Option C" />
+          <input type="text" id="optionD" placeholder="Option D" />
+          <input type="text" id="answerText" placeholder="Correct Answer (e.g. A)" />
+        `;
+      } else if (['identification', 'truefalse', 'yesno'].includes(type)) {
+        container.innerHTML = `
+          <input type="text" id="questionText" placeholder="Enter Question" />
+          <input type="text" id="answerText" placeholder="Answer" />
+        `;
+      }
+    }
+
+    function saveQuestion() {
+      const type = document.getElementById('questionType').value;
+      const question = document.getElementById('questionText')?.value || '';
+      const answer = document.getElementById('answerText')?.value || '';
+
+      if (!question) {
+        alert('Please enter a question.');
+        return;
+      }
+
+      if (type === 'multiple') {
+        const options = [
+          document.getElementById('optionA').value,
+          document.getElementById('optionB').value,
+          document.getElementById('optionC').value,
+          document.getElementById('optionD').value,
+        ];
+
+        if (options.some(opt => !opt)) {
+          alert('Please fill in all multiple-choice options.');
+          return;
+        }
+
+        savedQuestions.push({ type, question, options, answer });
+      } else {
+        savedQuestions.push({ type, question, answer });
+      }
+
+      document.getElementById('questionForm').style.display = 'none';
+      renderSavedQuestions();
+    }
+
+    function renderSavedQuestions() {
+      const savedDiv = document.getElementById('savedQuestions');
+      savedDiv.innerHTML = '';
+
+      if (savedQuestions.length > 0) {
+        document.getElementById('actions').style.display = 'block';
+      } else {
+        document.getElementById('actions').style.display = 'none';
+      }
+
+      savedQuestions.forEach((q, index) => {
+        let optionsText = '';
+        if (q.options && q.type === 'multiple') {
+          const letters = ['A', 'B', 'C', 'D'];
+          optionsText = q.options.map((opt, i) => `${letters[i]}. ${opt}`).join('<br>');
+        }
+
+        const typeMap = {
+          'multiple': 'Multiple Choice Type',
+          'identification': 'Identification Type',
+          'truefalse': 'True or False Type',
+          'yesno': 'Yes or No Type',
+          'essay': 'Essay Type'
+        };
+
+        savedDiv.innerHTML += `
+          <div class="saved">
+            <strong>Type:</strong> ${typeMap[q.type] || q.type}<br>
+            <strong>Question:</strong> ${q.question}<br>
+            ${optionsText ? `<strong>Options:</strong><br>${optionsText}<br>` : ''}
+            <strong>Answer:</strong> ${q.answer || '—'}<br>
+            <button class="action-btn" onclick="editQuestion(${index})">✏️ Edit</button>
+            <button class="action-btn delete" onclick="deleteQuestion(${index})">🗑 Delete</button>
+          </div>
+        `;
+      });
+    }
+
+    function deleteQuestion(index) {
+      savedQuestions.splice(index, 1);
+      renderSavedQuestions();
+    }
+
+    function clearAll() {
+      if (confirm("Are you sure you want to delete all saved questions?")) {
+        savedQuestions = [];
+        renderSavedQuestions();
+      }
+    }
+
+    function downloadQuestions() {
+      const blob = new Blob([JSON.stringify(savedQuestions, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'questions.json';
+      link.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function togglePreview() {
+  if (savedQuestions.length === 0) {
+    alert("No questions to preview.");
+    return;
+  }
+
+  const previewWindow = window.open('', '_blank');
+  previewWindow.document.write('<h1>Preview of Questions</h1>');
+
+  savedQuestions.forEach((q, index) => {
+    previewWindow.document.write(`<p><strong>Question ${index + 1}:</strong> ${q.question}<br>`);
+
+    if (q.options && q.type === 'multiple') {
+      const letters = ['A', 'B', 'C', 'D'];
+      const formattedOptions = q.options.map((opt, i) => `${letters[i]}. ${opt}`).join('<br>');
+      previewWindow.document.write(`<strong>Options:</strong><br>${formattedOptions}<br>`);
+    }
+
+    previewWindow.document.write(`<strong>Correct Answer:</strong> ${q.answer || '—'}</p><hr>`);
+  });
+}
+
+    function editQuestion(index) {
+      const q = savedQuestions[index];
+      document.getElementById('questionForm').style.display = 'block';
+      document.getElementById('questionType').value = q.type;
+      renderInputForm();
+
+      document.getElementById('questionText').value = q.question;
+      if (q.answer) document.getElementById('answerText').value = q.answer;
+      if (q.options) {
+        document.getElementById('optionA').value = q.options[0];
+        document.getElementById('optionB').value = q.options[1];
+        document.getElementById('optionC').value = q.options[2];
+        document.getElementById('optionD').value = q.options[3];
+      }
+
+      savedQuestions.splice(index, 1); // Remove the question being edited
+    }
+  </script>
+</body>
+</html>
