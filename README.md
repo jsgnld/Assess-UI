@@ -1,6 +1,6 @@
 # Assess UI
 
-A modern, responsive frontend module designed to handle interactive quizzes and user evaluations. This repository serves as the client-side presentation layer for a broader assessment management system.
+A modern, responsive frontend module designed to handle interactive quizzes and user evaluations. Developed by **Jose Mari Aguinaldo**, this repository serves as the client-side presentation layer for a broader assessment management system.
 
 ## 📖 Overview
 
@@ -25,4 +25,5 @@ To evolve this interface into a fully functional, data-driven application, futur
 - Integrate a relational database (such as MySQL or SQLite) to persistently store user profiles, assessment histories, and analytical grading data.
 
 ## 🎥 Demonstration
+
 https://github.com/user-attachments/assets/3d998b7d-e267-4c79-b569-01f5e1e09222
