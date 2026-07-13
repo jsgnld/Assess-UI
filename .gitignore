@@ -1,0 +1,9 @@
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Standard dependencies folder (ready for when you scale or add testing libraries)
+node_modules/
+
+# Environment variables (just in case you add an API key later)
+.env
